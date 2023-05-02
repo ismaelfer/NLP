@@ -1,0 +1,94 @@
+# creamos un pipeline Stopwords, BoW y Balanced Random Forest:
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+def get_experiment_4_pipeline():
+    return Pipeline(
+        [
+            (
+                "features",
+                FeatureUnion(
+                    [
+                        ('preprocessing', preprocessing_pipeline),
+                        ('BoW', CountVectorizer(stop_words=stopwords)),
+                        ("chars_count", CharsCountTransformer()),
+                    ]
+                ),
+            ),
+            ("clf", BalancedRandomForestClassifier(random_state=42)),
+        ]
+    )
+
+    def run(dataset, pipeline):
+    """Creamos el pipeline y luego lo ejecutamos el pipeline sobre un dataset.
+    Retorna el modelo ya entrenado mas sus labels asociadas y los scores obtenidos al evaluarlo."""
+
+    # Dividimos el dataset en train y test, aún no se transforma de Strings a valores numéricos.
+    X_train, X_test, y_train, y_test = train_test_split(
+        dataset.texto,
+        dataset.clase,
+        shuffle=True,
+        test_size=0.33,
+        random_state=42,
+    )
+
+    print('Muestra de textos: \n', X_train.sample(5))
+
+    print(f"# Datos de entrenamiento en dataset: {len(X_train)}")
+    print(f"# Datos de testing en dataset: {len(X_test)}")
+
+    # Entrenamos el clasificador (Ejecuta el entrenamiento sobre todo el pipeline).
+    # En este caso el Bag of Words es el encargado de transformar de Strings a vectores numéricos.
+    pipeline.fit(X_train, y_train)
+
+    # Predecimos las probabilidades de intensidad de cada elemento del set de prueba.
+    predicted_probabilities = pipeline.predict_proba(X_test)
+
+    # Obtenemos el orden de las clases aprendidas.
+    learned_labels = pipeline.classes_
+
+    # Evaluamos:
+    scores = evaluate(predicted_probabilities, y_test, learned_labels)
+    return pipeline, learned_labels, scores
+
+
+    # Creamos el pipeline
+pipeline = get_experiment_4_pipeline()
+
+# Ejecutamos el pipeline sobre el dataset y guardamos el clasificador, las labels aprendidas y los scores obtenidos
+classifier, learned_labels, scores = run(train, pipeline)
+
+# Imprimimos las métricas en el conjunto de testing
+print(f"AUC: {scores[0]}")
+print(f"Kappa: {scores[1]}")
+print(f"Accuracy: {scores[2]}")
+
+ValueError                                Traceback (most recent call last)
+/home/ismael/Desktop/NLP/Competicion/Assignment_1_Ismael.ipynb Cell 57 in 5
+      2 pipeline = get_experiment_4_pipeline()
+      4 # Ejecutamos el pipeline sobre el dataset y guardamos el clasificador, las labels aprendidas y los scores obtenidos
+----> 5 classifier, learned_labels, scores = run(train, pipeline)
+      7 # Imprimimos las métricas en el conjunto de testing
+      8 print(f"AUC: {scores[0]}")
+
+/home/ismael/Desktop/NLP/Competicion/Assignment_1_Ismael.ipynb Cell 57 in 2
+     17 print(f"# Datos de testing en dataset: {len(X_test)}")
+     19 # Entrenamos el clasificador (Ejecuta el entrenamiento sobre todo el pipeline).
+     20 # En este caso el Bag of Words es el encargado de transformar de Strings a vectores numéricos.
+---> 21 pipeline.fit(X_train, y_train)
+     23 # Predecimos las probabilidades de intensidad de cada elemento del set de prueba.
+     24 predicted_probabilities = pipeline.predict_proba(X_test)
+
+File ~/.local/lib/python3.10/site-packages/sklearn/pipeline.py:378, in Pipeline.fit(self, X, y, **fit_params)
+    352 """Fit the model.
+    353 
+    354 Fit all the transformers one after the other and transform the
+   (...)
+    375     Pipeline with fitted steps.
+    376 """
+    377 fit_params_steps = self._check_fit_params(**fit_params)
+...
+--> 652     raise ValueError(msg)
+    654 if bcol_lengths[j] == 0:
+    655     bcol_lengths[j] = A.shape[1]
+
+ValueError: blocks[0,:] has incompatible row dimensions. Got blocks[0,1].shape[0] == 8183, expected 1.
